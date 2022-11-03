@@ -75,6 +75,7 @@ def timegan (ori_data, parameters):
   iterations   = parameters['iterations']
   batch_size   = parameters['batch_size']
   module_name  = parameters['module'] 
+  show_step_info = parameters["show_train_step_info"]
   z_dim        = dim
   gamma        = 1
     
@@ -99,7 +100,6 @@ def timegan (ori_data, parameters):
       e_outputs = e_rnn(X)
       e_dense = tf.keras.layers.Dense(hidden_dim, activation='sigmoid')
       H = e_dense(e_outputs)
-
     return H
       
   def recovery (H, T):   
@@ -181,19 +181,33 @@ def timegan (ori_data, parameters):
   # Embedder & Recovery
   H = embedder(X, T)
   X_tilde = recovery(H, T)
+  
+  print("X",X.get_shape()) # 表明期望的输入是None個 24X6维向量。
+  print("H",H.get_shape())
+  print("X_tilde",X_tilde.get_shape(),"\n")
     
   # Generator
   E_hat = generator(Z, T)
   H_hat = supervisor(E_hat, T)
   H_hat_supervise = supervisor(H, T)
     
+  print("E_hat",E_hat.get_shape())
+  print("H_hat",H_hat.get_shape())
+  print("H_hat_supervise",H_hat_supervise.get_shape(),"\n")
+
   # Synthetic data
   X_hat = recovery(H_hat, T)
+
+  print("H_hat",H_hat.get_shape(),"\n")
     
   # Discriminator
   Y_fake = discriminator(H_hat, T)
   Y_real = discriminator(H, T)     
   Y_fake_e = discriminator(E_hat, T)
+  
+  print("Y_fake",Y_fake.get_shape())
+  print("Y_real",Y_real.get_shape())
+  print("Y_fake_e",Y_fake_e.get_shape(),"\n")
     
   # Variables        
   e_vars = [v for v in tf.compat.v1.trainable_variables() if v.name.startswith('embedder')]
@@ -237,10 +251,12 @@ def timegan (ori_data, parameters):
   G_solver = tf.compat.v1.train.AdamOptimizer().minimize(G_loss, var_list = g_vars + s_vars)      
   GS_solver = tf.compat.v1.train.AdamOptimizer().minimize(G_loss_S, var_list = g_vars + s_vars)   
         
-  ## TimeGAN training   
-  sess = tf.compat.v1.Session()
-  sess.run(tf.compat.v1.global_variables_initializer())
+  ## TimeGAN training  
+  with tf.compat.v1.Session() as sess: 
+  # sess = tf.compat.v1.Session()
+    sess.run(tf.compat.v1.global_variables_initializer())
     
+  exit()
   # 1. Embedding network training
   print('Start Embedding Network Training')
     
@@ -250,7 +266,7 @@ def timegan (ori_data, parameters):
     # Train embedder        
     _, step_e_loss = sess.run([E0_solver, E_loss_T0], feed_dict={X: X_mb, T: T_mb})        
     # Checkpoint
-    if itt % 1000 == 0:
+    if itt % show_step_info == 0:
       print('step: '+ str(itt) + '/' + str(iterations) + ', e_loss: ' + str(np.round(np.sqrt(step_e_loss),4)) ) 
       
   print('Finish Embedding Network Training')
@@ -266,7 +282,7 @@ def timegan (ori_data, parameters):
     # Train generator       
     _, step_g_loss_s = sess.run([GS_solver, G_loss_S], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})       
     # Checkpoint
-    if itt % 1000 == 0:
+    if itt % show_step_info == 0:
       print('step: '+ str(itt)  + '/' + str(iterations) +', s_loss: ' + str(np.round(np.sqrt(step_g_loss_s),4)) )
       
   print('Finish Training with Supervised Loss Only')
@@ -298,7 +314,7 @@ def timegan (ori_data, parameters):
       _, step_d_loss = sess.run([D_solver, D_loss], feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
         
     # Print multiple checkpoints
-    if itt % 1000 == 0:
+    if itt % show_step_info == 0:
       print('step: '+ str(itt) + '/' + str(iterations) + 
             ', d_loss: ' + str(np.round(step_d_loss,4)) + 
             ', g_loss_u: ' + str(np.round(step_g_loss_u,4)) + 

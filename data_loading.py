@@ -96,8 +96,10 @@ def real_data_loading (data_name, seq_len):
         
   # Flip the data to make chronological data
   ori_data = ori_data[::-1]
+  print("before normalization of lastest data's first label", ori_data[0][0]) 
   # Normalize the data
   ori_data = MinMaxScaler(ori_data)
+  print("after normalization of lastest data's first label",ori_data[0][0])
     
   # Preprocess the dataset
   temp_data = []    

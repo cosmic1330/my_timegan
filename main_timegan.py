@@ -78,6 +78,7 @@ def main (args):
   parameters['num_layer'] = args.num_layer
   parameters['iterations'] = args.iteration
   parameters['batch_size'] = args.batch_size
+  parameters['show_train_step_info'] = args.show_train_step_info
       
   generated_data = timegan(ori_data, parameters)   
   print('Finish Synthetic Data Generation')
@@ -155,6 +156,11 @@ if __name__ == '__main__':
       '--metric_iteration',
       help='iterations of the metric computation',
       default=10,
+      type=int)
+  parser.add_argument(
+      '--show_train_step_info',
+      help='print infomation when the number of training number activate',
+      default=1000,
       type=int)
   
   args = parser.parse_args() 
