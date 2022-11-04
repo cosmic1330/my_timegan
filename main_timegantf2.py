@@ -22,24 +22,24 @@ main_timegan.py
 """
 
 ## Necessary packages
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import argparse
+import warnings
+
 import numpy as np
 import pandas as pd
-import warnings
+
 warnings.filterwarnings("ignore")
 
-# 1. TimeGAN model
-from timegan import timegan
 # 2. Data loading
 from data_loading import real_data_loading, sine_data_generation
 # 3. Metrics
 from metrics.discriminative_metrics import discriminative_score_metrics
 from metrics.predictive_metrics import predictive_score_metrics
 from metrics.visualization_metrics import visualization
+# 1. TimeGAN model
+from timegantf2 import timegan
 
 
 def main (args):
@@ -86,36 +86,7 @@ def main (args):
   # pd.DataFrame(generated_data).to_csv(f'/fakedata/{args.data_name}/data.csv')
   print(f'check generated data shape:{np.shape(generated_data)}')
   print('Finish Synthetic Data Generation','\n')
-
-  ## Performance metrics   
-  # Output initialization
-  metric_results = dict()
-  
-  # 1. Discriminative Score
-  discriminative_score = list()
-  for _ in range(args.metric_iteration):
-    temp_disc = discriminative_score_metrics(ori_data, generated_data)
-    discriminative_score.append(temp_disc)
-      
-  metric_results['discriminative'] = np.mean(discriminative_score) 
   exit()
-
-  # 2. Predictive score
-  predictive_score = list()
-  for tt in range(args.metric_iteration):
-    temp_pred = predictive_score_metrics(ori_data, generated_data)
-    predictive_score.append(temp_pred)   
-      
-  metric_results['predictive'] = np.mean(predictive_score)     
-          
-  # 3. Visualization (PCA and tSNE)
-  visualization(ori_data, generated_data, 'pca')
-  visualization(ori_data, generated_data, 'tsne')
-  
-  ## Print discriminative and predictive scores
-  print(metric_results)
-
-  return ori_data, generated_data, metric_results
 
 
 if __name__ == '__main__':  
